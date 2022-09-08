@@ -1,0 +1,797 @@
+---
+title: "Project"
+author: "Linqi Xu(lx2286), Yan Ji(yj2689), Jiyao Liu(jl5985)"
+date: "5/3/2022"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(quantmod)
+library(tidyr)
+library(dplyr)
+library(tidyverse)
+library(PerformanceAnalytics)
+library(readxl)
+library(copula)
+library(MASS)
+library(QRM)
+library(fGarch)
+library(Ecdat)
+library(quadprog)
+library(IntroCompFinR)
+```
+
+```{r}
+data <- read_xlsx("data.xlsx")
+```
+
+##1. Descriptive Statistics
+```{r}
+# monthly mean of each asset
+mean(data$JPM)
+mean(data$MSFT)
+mean(data$IBM)
+mean(data$GE)
+mean(data$GM)
+mean(data$BA)
+mean(data$T)
+mean(data$DD)
+mean(data$C)
+mean(data$KO)
+mean(data$XOM)
+mean(data$MRK)
+mean(data$SPY)
+```
+
+```{r}
+# standard deviation of each asset
+sd(data$JPM)
+sd(data$MSFT)
+sd(data$IBM)
+sd(data$GE)
+sd(data$GM)
+sd(data$BA)
+sd(data$T)
+sd(data$DD)
+sd(data$C)
+sd(data$KO)
+sd(data$XOM)
+sd(data$MRK)
+sd(data$SPY)
+```
+
+```{r}
+# Skewness Coefficients of each asset
+library(moments)
+skewness(data$JPM)
+skewness(data$MSFT)
+skewness(data$IBM)
+skewness(data$GE)
+skewness(data$GM)
+skewness(data$BA)
+skewness(data$T)
+skewness(data$DD)
+skewness(data$C)
+skewness(data$KO)
+skewness(data$XOM)
+skewness(data$MRK)
+skewness(data$SPY)
+```
+
+```{r}
+# kurtosis coefficients of each asset
+kurtosis(data$JPM)
+kurtosis(data$MSFT)
+kurtosis(data$IBM)
+kurtosis(data$GE)
+kurtosis(data$GM)
+kurtosis(data$BA)
+kurtosis(data$T)
+kurtosis(data$DD)
+kurtosis(data$C)
+kurtosis(data$KO)
+kurtosis(data$XOM)
+kurtosis(data$MRK)
+kurtosis(data$SPY)
+```
+
+```{r}
+# Beta of each asset
+cov(data$JPM,data$SPY)/var(data$SPY)
+cov(data$MSFT,data$SPY)/var(data$SPY)
+cov(data$IBM,data$SPY)/var(data$SPY)
+cov(data$GE,data$SPY)/var(data$SPY)
+cov(data$GM,data$SPY)/var(data$SPY)
+cov(data$BA,data$SPY)/var(data$SPY)
+cov(data$T,data$SPY)/var(data$SPY)
+cov(data$DD,data$SPY)/var(data$SPY)
+cov(data$C,data$SPY)/var(data$SPY)
+cov(data$KO,data$SPY)/var(data$SPY)
+cov(data$XOM,data$SPY)/var(data$SPY)
+cov(data$MRK,data$SPY)/var(data$SPY)
+cov(data$SPY,data$SPY)/var(data$SPY)
+```
+
+```{r}
+# plot each asset
+data$Date = as.Date(data$Date, format = "%m/%d/%y")
+# JPM
+plot(data$Date,data$JPM,type = "l",
+     xlab = "Time", ylab = "Return", main = "JPM")
+# MSFT
+plot(data$Date,data$MSFT,type = "l",
+     xlab = "Time", ylab = "Return", main = "MSFT")
+# IBM
+plot(data$Date,data$IBM,type = "l",
+     xlab = "Time", ylab = "Return", main = "IBM")
+# GE
+plot(data$Date,data$GE,type = "l",
+     xlab = "Time", ylab = "Return", main = "GE")
+# GM
+plot(data$Date,data$GM,type = "l",
+     xlab = "Time", ylab = "Return", main = "GM")
+# BA
+plot(data$Date,data$BA,type = "l",
+     xlab = "Time", ylab = "Return", main = "BA")
+# T
+plot(data$Date,data$T,type = "l",
+     xlab = "Time", ylab = "Return", main = "T")
+# DD
+plot(data$Date,data$DD,type = "l",
+     xlab = "Time", ylab = "Return", main = "DD")
+# C
+plot(data$Date,data$C,type = "l",
+     xlab = "Time", ylab = "Return", main = "C")
+# KO
+plot(data$Date,data$KO,type = "l",
+     xlab = "Time", ylab = "Return", main = "KO")
+# XOM
+plot(data$Date,data$XOM,type = "l",
+     xlab = "Time", ylab = "Return", main = "XOM")
+# MRK
+plot(data$Date,data$MRK,type = "l",
+     xlab = "Time", ylab = "Return", main = "MRK")
+# SPY
+plot(data$Date,data$SPY,type = "l",
+     xlab = "Time", ylab = "Return", main = "SPY")
+```
+
+```{r}
+hist(data$JPM, xlab = "return", main = "Histogram of JPM")
+hist(data$MSFT, xlab = "return", main = "Histogram of MSFT")
+hist(data$IBM, xlab = "return", main = "Histogram of IBM")
+hist(data$GE, xlab = "return", main = "Histogram of GE")
+hist(data$GM, xlab = "return", main = "Histogram of GM")
+hist(data$BA, xlab = "return", main = "Histogram of BA")
+hist(data$T, xlab = "return", main = "Histogram of T")
+hist(data$DD, xlab = "return", main = "Histogram of DD")
+hist(data$C, xlab = "return", main = "Histogram of C")
+hist(data$KO, xlab = "return", main = "Histogram of KO")
+hist(data$XOM, xlab = "return", main = "Histogram of XOM")
+hist(data$MRK, xlab = "return", main = "Histogram of MRK")
+hist(data$SPY, xlab = "return", main = "Histogram of SPY")
+```
+
+```{r}
+# histogram
+boxplot(data$JPM, main = "Boxplot of JPM")
+boxplot(data$MSFT, main = "Boxplot of MSFT")
+boxplot(data$IBM, main = "Boxplot of IBM")
+boxplot(data$GE, main = "Boxplot of GE")
+boxplot(data$GM, main = "Boxplot of GM")
+boxplot(data$BA, main = "Boxplot of BA")
+boxplot(data$T, main = "Boxplot of T")
+boxplot(data$DD, main = "Boxplot of DD")
+boxplot(data$C, main = "Boxplot of C")
+boxplot(data$KO, main = "Boxplot of KO")
+boxplot(data$XOM, main = "Boxplot of XOM")
+boxplot(data$MRK, main = "Boxplot of MRK")
+boxplot(data$SPY, main = "Boxplot of SPY")
+```
+
+```{r}
+# qqplot
+#JPM
+qqnorm(data$JPM, main = "qq-plot for JPM")
+qqline(data$JPM)
+#MSFT
+qqnorm(data$MSFT, main = "qq-plot for MSFT")
+qqline(data$MSFT)
+#IBM
+qqnorm(data$IBM, main = "qq-plot for IBM")
+qqline(data$IBM)
+#GE
+qqnorm(data$GE, main = "qq-plot for GE")
+qqline(data$GE)
+#GM
+qqnorm(data$GM, main = "qq-plot for GM")
+qqline(data$GM)
+#BA
+qqnorm(data$BA, main = "qq-plot for BA")
+qqline(data$BA)
+#T
+qqnorm(data$T, main = "qq-plot for T")
+qqline(data$T)
+#DD
+qqnorm(data$DD, main = "qq-plot for DD")
+qqline(data$DD)
+#C
+qqnorm(data$C, main = "qq-plot for C")
+qqline(data$C)
+#KO
+qqnorm(data$KO, main = "qq-plot for KO")
+qqline(data$KO)
+#XOM
+qqnorm(data$XOM, main = "qq-plot for XOM")
+qqline(data$XOM)
+#MRK
+qqnorm(data$MRK, main = "qq-plot for MRK")
+qqline(data$MRK)
+#SPY
+qqnorm(data$SPY, main = "qq-plot for SPY")
+qqline(data$SPY)
+```
+
+```{r}
+# test if the asset is stationary
+library(tseries)
+adf.test(data$JPM)
+adf.test(data$MSFT)
+adf.test(data$IBM)
+adf.test(data$GE)
+adf.test(data$GM)
+adf.test(data$BA)
+adf.test(data$T)
+adf.test(data$DD)
+adf.test(data$C)
+adf.test(data$KO)
+adf.test(data$XOM)
+adf.test(data$MRK)
+adf.test(data$SPY)
+```
+
+```{r}
+K=3
+# JPM
+#t distribution
+fit_t1 = fit.st(data$JPM)
+AIC_t1=2*K-2*fit_t1$ll.max
+AIC_t1
+# normal
+fit1 = fitdistr(data$JPM, "normal")
+AIC(fit1)
+#ged
+fitged1 = gedFit(data$JPM)
+2*fitged1$objective+2*K
+# choose t distribution
+
+# MSFT
+#t distribution
+fit_t2 = fit.st(data$MSFT)
+AIC_t2=2*K-2*fit_t2$ll.max
+AIC_t2
+# normal
+fit2 = fitdistr(data$MSFT, "normal")
+AIC(fit2)
+#ged
+fitged2 = gedFit(data$MSFT)
+2*fitged2$objective+2*K
+# choose normal distribution
+
+# IBM
+#t distribution
+fit_t3 = fit.st(data$IBM)
+AIC_t3=2*K-2*fit_t3$ll.max
+AIC_t3
+# normal
+fit3 = fitdistr(data$IBM, "normal")
+AIC(fit3)
+#ged
+fitged3 = gedFit(data$IBM)
+2*fitged3$objective+2*K
+# choose ged distribution
+
+# GE
+#t distribution
+fit_t4 = fit.st(data$GE)
+AIC_t4=2*K-2*fit_t4$ll.max
+AIC_t4
+# normal
+fit4 = fitdistr(data$GE, "normal")
+AIC(fit4)
+#ged
+fitged4 = gedFit(data$GE)
+2*fitged4$objective+2*K
+# choose ged distribution
+
+# GM
+#t distribution
+fit_t5 = fit.st(data$GM)
+AIC_t5=2*K-2*fit_t5$ll.max
+AIC_t5
+# normal
+fit5 = fitdistr(data$GM, "normal")
+AIC(fit5)
+#ged
+fitged5 = gedFit(data$GM)
+2*fitged5$objective+2*K
+# choose ged distribution
+
+# BA
+#t distribution
+fit_t6 = fit.st(data$BA)
+AIC_t6=2*K-2*fit_t6$ll.max
+AIC_t6
+# normal
+fit6 = fitdistr(data$BA, "normal")
+AIC(fit6)
+#ged
+fitged6 = gedFit(data$BA)
+2*fitged6$objective+2*K
+# choose t distribution
+
+# T
+#t distribution
+fit_t7 = fit.st(data$T)
+AIC_t7=2*K-2*fit_t7$ll.max
+AIC_t7
+# normal
+fit7 = fitdistr(data$T, "normal")
+AIC(fit7)
+#ged
+fitged7 = gedFit(data$T)
+2*fitged7$objective+2*K
+# choose normal distribution
+
+# DD
+#t distribution
+fit_t8 = fit.st(data$DD)
+AIC_t8=2*K-2*fit_t8$ll.max
+AIC_t8
+# normal
+fit8 = fitdistr(data$DD, "normal")
+AIC(fit8)
+#ged
+fitged8 = gedFit(data$DD)
+2*fitged8$objective+2*K
+# choose ged distribution
+
+# c
+#t distribution
+fit_t9 = fit.st(data$C)
+AIC_t9=2*K-2*fit_t9$ll.max
+AIC_t9
+# normal
+fit9 = fitdistr(data$C, "normal")
+AIC(fit9)
+#ged
+fitged9 = gedFit(data$C)
+2*fitged9$objective+2*K
+# choose t distribution
+
+# KO
+#t distribution
+fit_t10 = fit.st(data$KO)
+AIC_t10=2*K-2*fit_t10$ll.max
+AIC_t10
+# normal
+fit10 = fitdistr(data$KO, "normal")
+AIC(fit10)
+#ged
+fitged10 = gedFit(data$KO)
+2*fitged10$objective+2*K
+# choose t distribution
+
+# XOM
+#t distribution
+fit_t11 = fit.st(data$XOM)
+AIC_t11=2*K-2*fit_t11$ll.max
+AIC_t11
+# normal
+fit11 = fitdistr(data$XOM, "normal")
+AIC(fit11)
+#ged
+fitged11 = gedFit(data$XOM)
+2*fitged11$objective+2*K
+# choose ged distribution
+
+# MRK
+#t distribution
+fit_t12 = fit.st(data$MRK)
+AIC_t12=2*K-2*fit_t12$ll.max
+AIC_t12
+# normal
+fit12 = fitdistr(data$MRK, "normal")
+AIC(fit12)
+#ged
+fitged12 = gedFit(data$MRK)
+2*fitged12$objective+2*K
+# choose t distribution
+
+#SPY
+#t distribution
+fit_t13 = fit.st(data$SPY)
+AIC_t13=2*K-2*fit_t13$ll.max
+AIC_t13
+# normal
+fit13 = fitdistr(data$SPY, "normal")
+AIC(fit13)
+#ged
+fitged13 = gedFit(data$SPY)
+2*fitged13$objective+2*K
+# choose ged distribution
+```
+
+```{r}
+#compute Sharpe Ratio
+sharpe(data$JPM)
+sharpe(data$MSFT)
+sharpe(data$IBM)
+sharpe(data$GE)
+sharpe(data$GM)
+sharpe(data$BA)
+sharpe(data$T)
+sharpe(data$DD)
+sharpe(data$C)
+sharpe(data$KO)
+sharpe(data$XOM)
+sharpe(data$MRK)
+```
+
+```{r}
+# annually mean
+mean(data$JPM)*12
+mean(data$MSFT)*12
+mean(data$IBM)*12
+mean(data$GE)*12
+mean(data$GM)*12
+mean(data$BA)*12
+mean(data$T)*12
+mean(data$DD)*12
+mean(data$C)*12
+mean(data$KO)*12
+mean(data$XOM)*12
+mean(data$MRK)*12
+mean(data$SPY)*12
+```
+
+```{r}
+# annually sd
+sd(data$JPM)*sqrt(12)
+sd(data$MSFT)*sqrt(12)
+sd(data$IBM)*sqrt(12)
+sd(data$GE)*sqrt(12)
+sd(data$GM)*sqrt(12)
+sd(data$BA)*sqrt(12)
+sd(data$T)*sqrt(12)
+sd(data$DD)*sqrt(12)
+sd(data$C)*sqrt(12)
+sd(data$KO)*sqrt(12)
+sd(data$XOM)*sqrt(12)
+sd(data$MRK)*sqrt(12)
+sd(data$SPY)*sqrt(12)
+```
+
+```{r}
+# pairwise scatter plots
+pairs(data[,15:27])
+```
+
+```{r}
+# covariance matrix
+cov(data[,15:26])
+```
+
+##3. Portfolio Theory
+```{r}
+# with short-sales
+mean_vect = colMeans(data[,15:26])
+mu = matrix(c(mean_vect), nrow = 12)
+omiga = cov(data[,15:26])
+inverse = solve(omiga)
+one = matrix(c(1,1,1), nrow = 12)
+weight_mvp = inverse%*%one%*%solve(t(one) %*% inverse %*% one)
+weight_mvp
+mu_mvp = t(one)%*%inverse%*%mu %*%solve(t(one) %*% inverse %*% one)
+mu_mvp
+mu_mvp*12
+sd_mvp = sqrt(1/(t(one) %*% inverse %*% one))
+sd_mvp
+(sd_mvp^2)*12
+```
+
+```{r}
+# mvp of VaR and ES
+qnorm(0.05)
+-100000*(mu_mvp-1.645*sd_mvp)
+100000*(mu_mvp+ sd_mvp*dnorm(-1.645)/0.05)
+# each asset VaR
+sd_vect = sqrt(diag(omiga))
+sd = matrix(c(sd_vect), nrow = 12)
+-100000 * (mu-1.645*sd)
+```
+
+```{r}
+# risk-free rate = 0.03%
+#tangency portfolio without short sales
+mu_f = 0.0003
+tangency.portfolio(mean_vect, omiga, mu_f, shorts = FALSE)
+#VaR and ES
+mu.t = 0.02847055
+sig.t = 0.05179148
+-100000*(mu.t-1.645*sig.t)
+100000*(mu.t+ sig.t*dnorm(-1.645)/0.05)
+#Sharpe’s ratio of tangency portfolio
+SR.t = (mu.t - mu_f)/sig.t 
+SR.t
+#Sharpe’s ratio of each asset
+Results = matrix(NA, 12, 1)
+for (i in 1:12){
+        Results[i,1] = (mu[i,1]-mu_f*one[i,1])%*%solve(sd[i,1])
+}
+round(Results,4)
+
+w_tangency = tangency.portfolio(mean_vect, omiga, mu_f, shorts = FALSE)
+w_tangency
+```
+
+```{r}
+# without short-sales
+eret = colMeans(data[,15:26]) #Expected returns
+Dmat = cov(data[,15:26])   #covariance matrix
+na = ncol(Dmat) #number of assets
+dvec = rep(0,na)
+shorts=FALSE # short sales not considered
+if(!shorts) {
+  Amat <-  diag(na) ; bvec <- rep(0, na)   # No short-selling
+  Amat=cbind(Amat,rep(1,na),rep(-1,na)) #relax full investment
+  bvec=c(bvec,1,-1) # weights sum up approx 1
+} else {cat("Short sales not considered yet!!!")}
+
+#lets find the minimum variance portfolio
+portfolio.out =solve.QP(Dmat, dvec, Amat, bvec, meq=1)
+(wgs=portfolio.out$solution)  #portfolio weights
+wgs=wgs/sum(wgs) ;sum(wgs) #check whether sum up to 1
+portfolio.out$value*2     #minimum variance portfolio sol
+matmvp=(wgs%*%Dmat%*%wgs)^.5 # risk = st dev
+matmvp
+wgs%*%Dmat%*%wgs*12
+(ermvp=wgs%*%eret)# min var expected return
+wgs%*%eret*12
+#find VaR and ES
+-100000*(ermvp-1.645*matmvp)
+100000*(ermvp+ matmvp*dnorm(-1.645)/0.05)
+```
+
+```{r}
+eff.with = efficient.frontier(mean_vect, omiga, nport = 12, shorts = TRUE)
+eff.without = efficient.frontier(mean_vect, omiga, nport = 12, shorts = FALSE)
+
+plot(eff.with$sd,eff.with$er,type="l", col="red", xlim = c(0,0.13), ylim = c(-0.002,0.04),xlab = "sd", ylab = "er")
+lines(eff.without$sd, eff.without$er, col = "green")
+text(sd_vect[1], mean_vect[1], "JPM")
+text(sd_vect[2], mean_vect[2], "MSFT")
+text(sd_vect[3], mean_vect[3], "IBM")
+text(sd_vect[4], mean_vect[4], "GE")
+text(sd_vect[5], mean_vect[5], "GM")
+text(sd_vect[6], mean_vect[6], "BA")
+text(sd_vect[7], mean_vect[7], "T")
+text(sd_vect[8], mean_vect[8], "DD")
+text(sd_vect[9], mean_vect[9], "C")
+text(sd_vect[10], mean_vect[10], "KO")
+text(sd_vect[11], mean_vect[11], "XOM")
+text(sd_vect[12], mean_vect[12], "MRK")
+text(sd_vect[13], mean_vect[13], "SPY")
+legend("topright",legend=c("with short-sales", "without short-sales"),
+       col=c("red", "green"), lty=1:2, cex=0.8)
+```
+
+##4. Asset Allocation
+```{r}
+returns = data[ ,15:26]
+mu_p = 0.5/100
+mu_f = 0.0003
+investment = 100000
+cov_mat = cov(returns)
+cov_mat
+#the efficient portfolio with only risky assets
+datalength=300
+#Set of 300 possible target values
+muP = seq(0.005,0.005,length=datalength)
+#Store the std of portfolio returns
+sdP = muP
+#Portfolio weights matrix
+weights = matrix(0,nrow=datalength,ncol=12)
+M = length(mean_vect)
+A_eql = matrix(rep(1,M), ncol=1)
+Amat = cbind(rep(1,M), mean_vect, diag(1, nrow = M))
+for (i in 1:length(muP)) { 
+bvec <- c(1, muP[i], rep(0,M))
+result = solve.QP(Dmat=2*cov_mat,dvec=rep(0,M),Amat=Amat,bvec=bvec,meq=2) 
+sdP[i] = sqrt(result$value)
+weights[i,] = result$solution
+}
+ind = (sdP == min(sdP))
+w_risky = weights[ind, ][1, ]
+w_risky
+amount_risky = w_risky * investment
+amount_risky # amounts in each asset
+
+# monthly risk calculation
+total_risky = 0
+for (x in 1:12) { 
+  total_risky = w_risky[x] * returns[x] + total_risky
+}
+sd(unlist(total_risky))
+
+#the tangency portfolio from part 3
+w_tan = as.matrix(w_tangency$weights)
+#the efficient portfolio with risky assets and T-Bills
+mean_mat = matrix(mean_vect)
+return_tan = as.vector(t(w_tan) %*% mean_mat)
+theta_tan = (mu_p - mu_f) / (return_tan - mu_f)
+w_rf = 1 - theta_tan #weight for T-Bills
+w_rf
+w_r = theta_tan * w_tan #weight for each risky asset
+w_r
+w = c(w_r, w_rf)
+amount_rf = w_rf * investment #amount in T-Bill
+amount_rf
+amount_r =w_r * investment #amount in each risky asset
+amount_r
+# monthly risk calculation
+total_risky1 = 0
+for (x1 in 1:12) { 
+  total_risky1 = w[x] * returns[x] + total_risky 
+}
+sd(unlist(total_risky1 + w_rf * mu_f))
+```
+
+##5. Principle Component Analysis
+```{r}
+library(ggfortify)
+cor_mat = cor(returns) # the sample correlation matrix of the returns on 12 assets
+cor_mat
+pca = prcomp(returns)
+summary(pca)
+autoplot(pca, data = data, loadings = TRUE, loadings.label = TRUE)
+autoplot(pca, data = data, loadings = TRUE, loadings.label = TRUE, x=2, y=3)
+factanal(returns, factors = 4)
+```
+
+##6. Risk Management
+```{r}
+rf <- rep(0.0003, 61)
+returns_df <- data[15:27]
+returns_df <- as.data.frame(returns_df)
+returns_df[,14] <- rf
+colnames(returns_df) <- c("JPM","MSFT","IBM","GE","GM","BA","T","DD",
+     "C","KO","XOM","MRK","SPY","TBILL")
+```
+
+```{r}
+set.seed(12345)
+s0 <- 100000
+results <- matrix(NA, 4, 17)
+mvp <- rep(NA, 61)
+mvprf <- rep(NA,61)
+MVP <- rep(NA,61)
+
+for (i in 1:61) {
+  mvp[i] <- sum(returns_df[i,1:12]*w_risky)
+  mvprf[i] <- sum(returns_df[i,c(1:12,14)]*w)
+  MVP[i] <- sum(returns_df[i,1:12]*weight_mvp)
+}
+
+returns_df$mvp <- mvp
+returns_df$mvprf <- mvprf
+returns_df$MVP <- MVP
+
+for (i in 1:17) {
+
+  results[1,i] = -s0*(mean(returns_df[,i]) - 1.645*sd(returns_df[,i]))
+  results[2,i] = s0*(mean(returns_df[,i]) + sd(returns_df[,i])*dnorm(qnorm(0.05))/0.05)
+  q <- quantile(returns_df[,i], probs = c(0.05))
+  results[3,i] = -s0*q
+  results[4,i] = -s0*sum(returns_df[,i][returns_df[,i]<q])/length(returns_df[,i][returns_df[,i]< q])
+}
+
+rownames(results) <- c("VaR(0.05)", "ES(0.05)","npVaR(0.05)", "npES(0.05)")
+colnames(results) <- c("JPM","MSFT","IBM","GE","GM","BA","T","DD",
+     "C","KO","XOM","MRK","SPY","TBILL","mvp","mvprf","MVP")
+round(results,2)
+
+#BOOTSTRAP
+Sample.size <- 1000
+n <- 61
+resampled_values <- matrix(NA, nrow = Sample.size, ncol = n)
+for (b in 1:Sample.size) {
+  resample <- sample(1:n, n, replace = TRUE)
+  resampled_values[b,] <- resample
+}
+
+
+var.sim <- matrix(NA, Sample.size, 17)
+es.sim <- matrix(NA, Sample.size, 17)
+
+colnames(var.sim) <- c("JPM","MSFT","IBM","GE","GM","BA","T","DD",
+     "C","KO","XOM","MRK","SPY","TBILL","mvp","mvprf","MVP")
+colnames(es.sim) <- c("JPM","MSFT","IBM","GE","GM","BA","T","DD",
+     "C","KO","XOM","MRK","SPY","TBILL","mvp","mvprf","MVP")
+for (b in 1:Sample.size) {
+  resample_2 <- resampled_values[b,]
+  loop <- returns_df[resample_2,]
+  Results1 <- matrix(NA, 2, 17)
+  for (j in 1:17) {
+    q <- quantile(loop[,j], probs = c(0.05))
+    Results1[1,j] = -s0*q
+    Results1[2,j] = -s0*sum(returns_df[,j][returns_df[,j]<q])/length(returns_df[,j][returns_df[,j]< q])
+  }
+  var.sim [b,] <- Results1[1,]
+  es.sim [b,] <- Results1[2,]
+}
+
+Results <- matrix(NA, 6, 17)
+Results[1,] = colMeans(var.sim)
+for (i in 1:17){
+  Results[2,i] = 2*results[1,i] - quantile(var.sim[,i],probs = 0.975)
+  Results[3,i] = 2*results[1,i] - quantile(var.sim[,i],probs = 0.025)
+}
+Results[4,] = colMeans(es.sim,na.rm = TRUE)
+for (i in 1:17){
+  Results[5,i] = 2*results[2,i] - quantile(es.sim[,i],probs = 0.975,na.rm = TRUE)
+  Results[6,i] = 2*results[2,i] - quantile(es.sim[,i],probs = 0.025,na.rm = TRUE)
+}
+
+rownames(Results) <- c("esmitated VaR", "0.25% VaR", "0.975 VaR","esmitated ES", "0.25% ES", "0.975 ES")
+colnames(Results) <- c("JPM","MSFT","IBM","GE","GM","BA","T","DD",
+     "C","KO","XOM","MRK","SPY","TBILL","mvp","mvprf","MVP")
+round(Results, 1)
+```
+
+##7 Copula
+```{r}
+JPM <- unlist(returns_df[,1])
+n=length(JPM)
+data <- rank(JPM)/(n+1)
+for (i in 2:12) {
+  x <- unlist(returns_df[,i])
+  x <- rank(x)/(n+1)
+  data <- cbind(data, x)
+}
+para <- rep(NA, 66)
+inde <- 1
+for (i in 1:11) {
+  para[inde:(inde +11-i)] <- cor(returns_df[,1:12])[i,(i+1):12]
+  inde <- inde + 12-i
+}
+
+# normal copula
+ncop=normalCopula(param=para, dim=12, dispstr="un")
+ftn <- fitCopula(data=data, copula=ncop, method="ml")
+
+#ftt #t copula
+tcop=tCopula(param=para, dim=12, dispstr="un")
+ftt <- fitCopula(data=data, copula=tcop, method="ml", df=66)
+
+#ftclayton #clayton copula
+clcop=archmCopula(family="clayton", dim=12, param=2)
+ftclayton <- fitCopula(data=data,method="ml", copula=clcop)
+
+#ftgumbel #gumbel copula
+gcop=archmCopula(family="gumbel",dim=12,param = 2)
+ftgumbel <- fitCopula(data=data, copula = gcop, method="ml")
+
+# Calculate the AIC 
+AIC(ftn)
+AIC(ftt)
+AIC(ftclayton)
+AIC(ftgumbel)
+```
