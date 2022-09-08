@@ -1,0 +1,2 @@
+# code-sample
+The "project final" file is for the project about picking 12 stocks to form a portfolio, and evaluate it from different perspectives. (Descriptive statistics, portfolio theory, asset allocation, principal component analysis, risk management, Copulas) I am mainly responsible for portfolio theory and risk management. I calculate the MVP, efficient frontier, tangency portfolio, sharpie ratio, value at risk, expected shortfall, and I use bootstrap method to compute the estimated standard error in R. 
